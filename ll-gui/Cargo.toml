@@ -16,3 +16,4 @@ shellexpand = "3"
 regex = "1"
 toml = "0.8 "
 serde = { version = "1.0", features = ["derive"] }
+ll_core = { path = "../ll-core", package = "library-loader-core" }

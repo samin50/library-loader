@@ -8,7 +8,7 @@ fn main() -> ll_core::Result<()> {
     let app = clap::App::from(app_yaml)
         .about(env!("CARGO_PKG_DESCRIPTION"))
         .author(env!("CARGO_PKG_AUTHORS"))
-        .version(env!("CARGO_PKG_VERSION"))
+        .version(format!("{} ({})", env!("CARGO_PKG_VERSION"), ll_core::GIT_DESCRIBE).as_str())
         .get_matches();
 
     #[cfg(not(debug_assertions))]
@@ -59,7 +59,7 @@ fn main() -> ll_core::Result<()> {
     }
 
     println!("Using config at {:?}", config_path);
-    let mut config = Config::read(Some(config_path.clone()))?;
+    let mut config = Config::read(Some(config_path))?;
 
     if let Some(watch_path) = app.value_of("watch") {
         config.settings.watch_path = watch_path.into();
