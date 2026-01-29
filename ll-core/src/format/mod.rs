@@ -7,8 +7,15 @@ use {
 };
 
 mod extractors;
+mod processors;
 use crate::format::extractors::generic_extractor;
 pub use extractors::Files;
+
+#[derive(PartialEq,Debug, Clone)]
+pub enum Output {
+    File(&'static str),
+    Folder(&'static str),
+}
 
 macro_rules! ecad {
     ([$(($variant:tt, $variant_literal:literal)),*]) => {
@@ -65,43 +72,47 @@ pub struct Format {
     pub name: String,
     pub ecad: ECAD,
     pub create_folder: bool,
-    match_path: &'static str,
+    match_path: Vec<&'static str>,
+    output: Vec<Output>,
     ignore: Vec<&'static str>,
 }
 
 impl Format {
+    // Keep the from_ecad constructor used elsewhere in the codebase
     pub fn from_ecad<P: Into<PathBuf>>(name: &String, ecad: ECAD, output_path: P) -> Self {
-        //defaults
         let mut fmt = Self {
             output_path: output_path.into(),
             name: (*name).clone(),
             ecad,
             create_folder: false,
-            match_path: "",
+            match_path: vec![""],
+            output: vec![],
             ignore: vec![],
         };
-        // specific overrides, keep these in alphabetical order
+
         match fmt.ecad {
             ECAD::D3 => {
                 fmt.create_folder = true;
-                fmt.match_path = "3D";
+                fmt.match_path = vec!["3D"];
             }
             ECAD::DesignSpark => {
-                fmt.match_path = "DesignSpark PCB";
+                fmt.match_path = vec!["DesignSpark PCB"];
             }
             ECAD::Eagle => {
-                fmt.match_path = "EAGLE";
+                fmt.match_path = vec!["EAGLE"];
                 fmt.ignore = vec!["Readme.html"];
             }
             ECAD::EasyEDA => {
-                fmt.match_path = "EasyEDA";
+                fmt.match_path = vec!["EasyEDA"];
                 fmt.ignore = vec!["Readme.html"];
             }
             ECAD::KiCad => {
-                fmt.match_path = "KiCad";
+                fmt.match_path = vec!["KiCad"];
+                // default kicad outputs; consumer code may override
+                fmt.output = vec![Output::File("LibraryLoader.lib"), Output::File("LibraryLoader.dcm"), Output::Folder("LibraryLoader.pretty")];
             }
             ECAD::Zip => {
-                //no changes
+                // no changes
             }
         }
 
@@ -121,5 +132,18 @@ impl Format {
             ECAD::Zip => unreachable!("ZIP not handled!"),
             // ! NOTE: DO NOT ADD A _ => {} CATCHER HERE!
         })
+    }
+
+    pub fn process(&self, output_path: String, output_files: &mut Files, file_path: String, item: &mut Vec<u8>) -> crate::error::Result<()> {
+        match &self.ecad {
+            ECAD::D3 => processors::d3::process(self, output_path, output_files, file_path, item)?,
+            ECAD::DesignSpark => processors::eagle::process(self, output_path, output_files, file_path, item)?,
+            ECAD::Eagle => processors::eagle::process(self, output_path, output_files, file_path, item)?,
+            ECAD::EasyEDA => processors::easyeda::process(self, output_path, output_files, file_path, item)?,
+            ECAD::KiCad => processors::kicad::process(self, output_path, output_files, file_path, item)?,
+            ECAD::Zip => unreachable!("ZIP not handled!"),
+        };
+
+        Ok(())
     }
 }

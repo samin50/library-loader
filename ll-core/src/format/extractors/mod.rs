@@ -26,12 +26,17 @@ pub(super) fn generic_extractor(
             }
         }
 
-        if file_path_lower.contains(&format.match_path.to_lowercase()) {
-            let path = PathBuf::from(file_path);
-            let base_name = path.file_name().unwrap().to_string_lossy().to_string();
-            let mut f_data = Vec::<u8>::new();
-            item.read_to_end(&mut f_data)?;
-            files.insert(base_name, f_data);
+        // Match one or more configured match paths
+        for paths_to_extract in &format.match_path {
+            if file_path_lower.contains(&paths_to_extract.to_lowercase()) {
+                let path = PathBuf::from(&file_path);
+                let base_name = path.file_name().unwrap().to_string_lossy().to_string();
+                let mut f_data = Vec::<u8>::new();
+                item.read_to_end(&mut f_data)?;
+                files.insert(base_name, f_data);
+                // Once matched and extracted, skip to next archive entry
+                continue 'file_loop;
+            }
         }
     }
 
