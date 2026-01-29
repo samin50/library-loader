@@ -5,7 +5,7 @@ const DOCLIB : &str = "LibraryLoader.dcm";
 const FP_FOLDER : &str = "LibraryLoader.pretty";
 const U3D_FOLDER : &str = "LibraryLoader-3dmodels";
 
-pub fn process(format: &Format, output_path : String, output_files : &mut Files, file_name : String, item : &mut Vec<u8>) -> LLResult<()> {
+pub fn process(format: &Format, output_path : String, output_files : &mut Files, file_name : String, item : &mut Vec<u8>) -> crate::error::Result<()> {
 
     let file_path = PathBuf::from(output_path.clone()).join(file_name.clone());
     if let Some(ext) = &file_path.extension()
@@ -21,9 +21,7 @@ pub fn process(format: &Format, output_path : String, output_files : &mut Files,
                 let chars = match std::str::from_utf8(&item[..])
                     {
                         Ok(v) => v,
-                        Err(e) => return Err(
-                            LLError::new(format!("Could not convert file to valid utf8: {} ({})", e, file_name), "ll-core/src/format/processors/kicad.rs", 24)
-                        )
+                        Err(_e) => return Err(crate::error::Error::Other("Could not convert file to valid utf8 in kicad lib"))
                     };
                 
                 let mut d_out = Vec::new();
@@ -67,9 +65,7 @@ pub fn process(format: &Format, output_path : String, output_files : &mut Files,
                 let chars = match std::str::from_utf8(&item[..])
                     {
                         Ok(v) => v,
-                        Err(e) => return Err(
-                            LLError::new(format!("Could not convert file to valid utf8: {} ({})", e, file_name), "ll-core/src/format/processors/kicad.rs", 68)
-                        )
+                        Err(_e) => return Err(crate::error::Error::Other("Could not convert file to valid utf8 in kicad dcm"))
                     };
                 
                 let mut d_out = Vec::new();

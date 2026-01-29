@@ -1,13 +1,17 @@
 mod config;
 mod consts;
-mod cse;
+mod cse {
+    include!("cse/mod.rs");
+}
 mod epw;
 mod error;
 mod format;
 mod logger;
 mod updates;
 mod utils;
-mod watcher;
+mod watcher {
+    include!("watcher/mod.rs");
+}
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const GIT_DESCRIBE: &str = include_str!("../git.txt");
